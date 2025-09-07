@@ -243,8 +243,9 @@ input[type="range"]::-webkit-slider-thumb {
 .overlay-text {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: start center;
+  display: flex;
+  align-items: center;   /* vertical center */
+  justify-content: center; /* horizontal center */
   padding: 24px;
   pointer-events: none;
 }

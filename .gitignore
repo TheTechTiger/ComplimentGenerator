@@ -3,3 +3,4 @@ prompt.txt
 .venv
 test.py
 .gitignore
+compliments.db
