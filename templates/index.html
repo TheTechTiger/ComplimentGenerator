@@ -19,46 +19,37 @@
     </header>
 
     <main class="card">
-      <form id="compliment-form" class="form">
-        <div class="field">
-          <label for="mood"><i class="fa-solid fa-wand-magic-sparkles"></i> Mood</label>
-          <input id="mood" name="mood" type="range" min="0" max="9" value="0" list="mood-list" />
-          <datalist id="mood-list">
-            <option value="0" label="uplifting"></option>
-            <option value="1" label="funny"></option>
-            <option value="2" label="poetic"></option>
-            <option value="3" label="motivational"></option>
-            <option value="4" label="romantic"></option>
-            <option value="5" label="witty"></option>
-            <option value="6" label="gentle"></option>
-            <option value="7" label="bold"></option>
-            <option value="8" label="quirky"></option>
-            <option value="9" label="serene"></option>
-          </datalist>
-          <div class="mood-label" id="mood-label">uplifting</div>
-        </div>
+      <form id="compliment-form" class="form" action="/generate" method="POST">
+  <div class="field">
+    <label for="mood"><i class="fa-solid fa-wand-magic-sparkles"></i> Mood</label>
+    <input id="mood" name="mood" type="range" min="0" max="9" value="0" list="mood-list" />
+    <datalist id="mood-list">
+      <option value="0" label="uplifting"></option>
+      <option value="1" label="funny"></option>
+      <option value="2" label="poetic"></option>
+      <option value="3" label="motivational"></option>
+      <option value="4" label="romantic"></option>
+      <option value="5" label="witty"></option>
+      <option value="6" label="gentle"></option>
+      <option value="7" label="bold"></option>
+      <option value="8" label="quirky"></option>
+      <option value="9" label="serene"></option>
+    </datalist>
+    <div class="mood-label" id="mood-label">uplifting</div>
+  </div>
 
-        <div class="field">
-          <label for="name"><i class="fa-regular fa-user"></i> Name (optional)</label>
-          <input id="name" name="name" type="text" placeholder="Type a name or leave blank" maxlength="40" />
-        </div>
+  <div class="field">
+    <label for="name"><i class="fa-regular fa-user"></i> Name (optional)</label>
+    <input id="name" name="name" type="text" placeholder="Type a name or leave blank" maxlength="40" />
+  </div>
 
-        <div class="actions">
-          <button id="generate-btn" type="submit" class="btn primary">
-            <i class="fa-solid fa-sparkles"></i> Generate compliment
-          </button>
-        </div>
+  <div class="actions">
+    <button id="generate-btn" type="submit" class="btn primary">
+      <i class="fa-solid fa-sparkles"></i> Generate compliment
+    </button>
+  </div>
+</form>
 
-        <div id="error-box" class="error hidden">
-          <span id="error-text"></span>
-          <button id="retry-btn" type="button" class="btn subtle"><i class="fa-solid fa-rotate-right"></i> Retry</button>
-        </div>
-
-        <!-- <div id="progress" class="progress hidden">
-          <div class="spinner"></div>
-          <span>Brewing your compliment...</span>
-        </div> -->
-      </form>
     </main>
   </div>
 
@@ -96,79 +87,6 @@
     })();
 
     // Generate via Fetch
-    (function() {
-      const form = document.getElementById("compliment-form");
-      const errorBox = document.getElementById("error-box");
-      const errorText = document.getElementById("error-text");
-      const retryBtn = document.getElementById("retry-btn");
-      const progress = document.getElementById("progress");
-      const generateBtn = document.getElementById("generate-btn");
-
-      let lastPayload = null;
-
-      function showError(msg) {
-        errorText.textContent = msg || "Something went wrong.";
-        errorBox.classList.remove("hidden");
-      }
-      function hideError() {
-        errorBox.classList.add("hidden");
-      }
-      function setLoading(on) {
-        if (on) {
-          progress.classList.remove("hidden");
-          generateBtn.disabled = true;
-        } else {
-          progress.classList.add("hidden");
-          generateBtn.disabled = false;
-        }
-      }
-
-      async function submit(payload) {
-        // setLoading(true);
-        hideError();
-        try {
-          const res = await fetch("/generate", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(payload),
-          });
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            const code = err.error || "REQUEST_FAILED";
-            const msg = err.message || "Failed to generate. Please try again.";
-            showError(`(${code}) ${msg}`);
-            return;
-          }
-          const data = await res.json();
-          if (data.ok && data.redirect_url) {
-            window.location.href = data.redirect_url;
-          } else {
-            showError("Unexpected response. Please retry.");
-          }
-        } catch (e) {
-          showError("Network error. Check connection and retry.");
-        } finally {
-          setLoading(false);
-        }
-      }
-
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const moodIndex = parseInt(document.getElementById("mood").value || "0");
-        const labels = ["uplifting","funny","poetic","motivational","romantic","witty","gentle","bold","quirky","serene"];
-        const mood = labels[Math.max(0, Math.min(labels.length - 1, moodIndex))];
-        const name = (document.getElementById("name").value || "").trim();
-        lastPayload = { mood, name };
-        submit(lastPayload);
-      });
-
-      retryBtn.addEventListener("click", () => {
-        hideError();
-        if (lastPayload) {
-          submit(lastPayload);
-        }
-      });
-    })();
-  </script>
+    </script>
 </body>
 </html>

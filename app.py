@@ -203,7 +203,7 @@ def generate():
         except Exception as db_err:
             return jsonify({"ok": False, "error": "DB_ERROR", "message": str(db_err)}), 500
 
-        return jsonify({"ok": True, "redirect_url": url_for("view_compliment", compliment_id=compliment_id)})
+        return redirect('/view/' + compliment_id)
 
     except RuntimeError as api_err:
         return jsonify({"ok": False, "error": "A4F_API_ERROR", "message": str(api_err)}), 502
