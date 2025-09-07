@@ -185,6 +185,10 @@ def generate_image(mood, compliment_text):
 def home():
     return render_template("index.html")
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_file('favicon.webp', mimetype='image/webp')
+
 @app.route("/generate", methods=["POST"])
 def generate():
     try:
