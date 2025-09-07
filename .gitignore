@@ -2,3 +2,4 @@ prompt.txt
 .env
 .venv
 test.py
+.gitignore
