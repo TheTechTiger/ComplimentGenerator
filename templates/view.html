@@ -109,6 +109,7 @@
       const url = window.location.href;
       navigator.clipboard.writeText(url).then(() => {
         alert("Page URL copied to clipboard! You can now share it on Instagram.");
+        window.open("https://www.instagram.com/", "_blank");
       }, () => {
         alert("Failed to copy URL. Please copy it manually.");
       });

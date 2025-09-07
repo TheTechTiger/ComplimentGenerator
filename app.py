@@ -27,6 +27,8 @@ except Exception:
     A4F_API_KEY = os.environ.get("A4F_API_KEY", "")
 
 DB_PATH = "compliments.db"
+if os.name=='posix':
+    DB_PATH = "/tmp/compliments.db"  # For environments like Vercel
 
 def init_db():
     try:
