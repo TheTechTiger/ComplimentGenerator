@@ -1,0 +1,193 @@
+<!-- view.html -->
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Compliment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Great+Vibes&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1 class="title fade-in-once">Your Compliment</h1>
+      <p class="subtitle">Mood: <span class="badge">{{ mood }}</span></p>
+    </header>
+
+    <main class="view-wrap">
+      <div class="image-frame">
+        <img src="{{ url_for('get_image', compliment_id=compliment_id) }}" alt="Compliment background" class="art shadow-pop" />
+        <div class="overlay-text fade-in-delay">
+          <span class="cursive">{{ compliment }}</span>
+        </div>
+      </div>
+
+      <div class="social">
+        <a id="InstagramLink" target="_blank" class="btn social-btn ig" href="https://www.instagram.com/"><button class="btn social-btn ig" id="share-ig"><i class="fa-brands fa-instagram"></i> Instagram</button></a>
+        <a id="WhatsAppLink" target="_blank" class="btn social-btn wa" href="https://wa.me/?text={{ compliment|urlencode }}"><button class="btn social-btn wa" id="share-wa"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button></a>
+        <a id="XLink" target="_blank" class="btn social-btn x" href="https://twitter.com/intent/tweet?text={{ compliment|urlencode }}"><button class="btn social-btn x" id="share-x"><i class="fa-brands fa-x-twitter"></i> X</button></a>
+        <a id="TelegramLink" target="_blank" class="btn social-btn tg" href="https://telegram.me/share/url?text={{ compliment|urlencode }}"><button class="btn social-btn tg" id="share-tg"><i class="fa-brands fa-telegram"></i> Telegram</button></a>
+      </div>
+
+      <div class="tts-controls">
+        <button class="btn secondary" id="speak-btn"><i class="fa-solid fa-volume-high"></i> Listen</button>
+        <div id="tts-error" class="error small hidden">
+          <span id="tts-error-text">TTS failed. Please retry.</span>
+          <button id="tts-retry" class="btn tiny"><i class="fa-solid fa-rotate-right"></i> Retry</button>
+        </div>
+      </div>
+
+      <div class="streak">
+        <span><i class="fa-solid fa-fire"></i> Streak: <strong id="streak-count">0</strong></span>
+      </div>
+
+      <div class="actions">
+        <a href="{{ url_for('home') }}" class="btn primary"><i class="fa-solid fa-wand-magic-sparkles"></i> New compliment</a>
+      </div>
+    </main>
+  </div>
+
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+    <i class="fa-solid fa-sun"></i>
+    <i class="fa-solid fa-moon"></i>
+  </button>
+
+  <div id="confetti-layer" class="confetti-layer"></div>
+  <div id="emoji-layer" class="emoji-layer"></div>
+
+  <script>
+    // Theme switch
+    (function() {
+      const saved = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      document.getElementById("theme-toggle").addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme") || "light";
+        const next = current === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+      });
+    })();
+
+    // One-time load animations: confetti + emoji rain
+    (function() {
+      const confettiLayer = document.getElementById("confetti-layer");
+      const emojiLayer = document.getElementById("emoji-layer");
+      // Confetti
+      for (let i = 0; i < 80; i++) {
+        const c = document.createElement("span");
+        c.className = "confetti";
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.animationDelay = Math.random() * 0.5 + "s";
+        c.style.backgroundColor = ["#ff79c6","#50fa7b","#8be9fd","#bd93f9","#f1fa8c"][Math.floor(Math.random()*5)];
+        confettiLayer.appendChild(c);
+      }
+      // Emoji rain
+      const emojis = ["✨","🌟","💫","🎉","🌈","🪄","🫶","💖"];
+      for (let i = 0; i < 24; i++) {
+        const e = document.createElement("div");
+        e.className = "emoji-drop";
+        e.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        e.style.left = Math.random() * 100 + "vw";
+        e.style.animationDelay = (Math.random() * 0.8) + "s";
+        e.style.fontSize = (Math.random() * 18 + 20) + "px";
+        emojiLayer.appendChild(e);
+      }
+      // Remove after animation
+      setTimeout(() => {
+        confettiLayer.innerHTML = "";
+        emojiLayer.innerHTML = "";
+      }, 3000);
+    })();
+
+    // Share buttons
+    document.getElementById("share-ig").addEventListener("click", (e) => {
+      e.preventDefault();
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        alert("Page URL copied to clipboard! You can now share it on Instagram.");
+      }, () => {
+        alert("Failed to copy URL. Please copy it manually.");
+      });
+    });
+    document.getElementById("WhatsAppLink").href = "https://wa.me/?text=" + encodeURIComponent("Check out this compliment I received: " + window.location.href);
+    document.getElementById("XLink").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent("Check out this compliment I received: " + window.location.href);
+    document.getElementById("TelegramLink").href = "https://telegram.me/share/url?text=" + encodeURIComponent("Check out this compliment I received: " + window.location.href);
+
+
+    // Streak counter via cookies
+    (function() {
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+      }
+      function setCookie(name, value, days) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days*24*60*60*1000));
+        document.cookie = `${name}=${value}; expires=${d.toUTCString()}; path=/; SameSite=Lax`;
+      }
+      let count = parseInt(getCookie("compliment_streak") || "0");
+      count += 1;
+      setCookie("compliment_streak", count.toString(), 365);
+      document.getElementById("streak-count").textContent = count.toString();
+    })();
+
+    // TTS using backend edge-tts
+    (function() {
+      const speakBtn = document.getElementById("speak-btn");
+      const errBox = document.getElementById("tts-error");
+      const errText = document.getElementById("tts-error-text");
+      const retry = document.getElementById("tts-retry");
+      const compliment = `{{ compliment | replace('\n',' ') }}`;
+      const complimentId = `{{ compliment_id }}`;
+      let lastPayload = null;
+      let audioEl = null;
+
+      function showErr(msg) {
+        errText.textContent = msg || "TTS failed. Please retry.";
+        errBox.classList.remove("hidden");
+      }
+      function hideErr() {
+        errBox.classList.add("hidden");
+      }
+
+      async function speak(payload) {
+        hideErr();
+        try {
+          const res = await fetch("/tts", {
+            method: "POST",
+            headers: {"Content-Type":"application/json"},
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            showErr("(" + (err.error || "TTS_ERROR") + ") " + (err.message || "Request failed"));
+            return;
+          }
+          const blob = await res.blob();
+          if (audioEl) {
+            audioEl.pause();
+            URL.revokeObjectURL(audioEl.src);
+          }
+          audioEl = new Audio(URL.createObjectURL(blob));
+          audioEl.play().catch(() => showErr("Playback blocked. Tap to retry."));
+        } catch (e) {
+          showErr("Network error. Please retry.");
+        }
+      }
+
+      speakBtn.addEventListener("click", () => {
+        lastPayload = { compliment_id: complimentId, text: compliment };
+        speak(lastPayload);
+      });
+      retry.addEventListener("click", () => {
+        if (lastPayload) speak(lastPayload);
+      });
+    })();
+  </script>
+</body>
+</html>

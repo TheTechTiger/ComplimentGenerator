@@ -1,0 +1,174 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compliment Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Great+Vibes&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <h1 class="title">Craft a Compliment</h1>
+      <p class="subtitle">Pick a mood, add a name if you like, and let the magic happen.</p>
+    </header>
+
+    <main class="card">
+      <form id="compliment-form" class="form">
+        <div class="field">
+          <label for="mood"><i class="fa-solid fa-wand-magic-sparkles"></i> Mood</label>
+          <input id="mood" name="mood" type="range" min="0" max="9" value="0" list="mood-list" />
+          <datalist id="mood-list">
+            <option value="0" label="uplifting"></option>
+            <option value="1" label="funny"></option>
+            <option value="2" label="poetic"></option>
+            <option value="3" label="motivational"></option>
+            <option value="4" label="romantic"></option>
+            <option value="5" label="witty"></option>
+            <option value="6" label="gentle"></option>
+            <option value="7" label="bold"></option>
+            <option value="8" label="quirky"></option>
+            <option value="9" label="serene"></option>
+          </datalist>
+          <div class="mood-label" id="mood-label">uplifting</div>
+        </div>
+
+        <div class="field">
+          <label for="name"><i class="fa-regular fa-user"></i> Name (optional)</label>
+          <input id="name" name="name" type="text" placeholder="Type a name or leave blank" maxlength="40" />
+        </div>
+
+        <div class="actions">
+          <button id="generate-btn" type="submit" class="btn primary">
+            <i class="fa-solid fa-sparkles"></i> Generate compliment
+          </button>
+        </div>
+
+        <div id="error-box" class="error hidden">
+          <span id="error-text"></span>
+          <button id="retry-btn" type="button" class="btn subtle"><i class="fa-solid fa-rotate-right"></i> Retry</button>
+        </div>
+
+        <div id="progress" class="progress hidden">
+          <div class="spinner"></div>
+          <span>Brewing your compliment...</span>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+    <i class="fa-solid fa-sun"></i>
+    <i class="fa-solid fa-moon"></i>
+  </button>
+
+  <script>
+    // Theme switch
+    (function() {
+      const root = document.documentElement;
+      const saved = localStorage.getItem("theme") || "light";
+      document.documentElement.setAttribute("data-theme", saved);
+      const toggle = document.getElementById("theme-toggle");
+      toggle.addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme") || "light";
+        const next = current === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+      });
+    })();
+
+    // Mood slider labels
+    (function() {
+      const labels = ["uplifting","funny","poetic","motivational","romantic","witty","gentle","bold","quirky","serene"];
+      const slider = document.getElementById("mood");
+      const label = document.getElementById("mood-label");
+      function update() {
+        const i = Math.max(0, Math.min(labels.length - 1, parseInt(slider.value || "0")));
+        label.textContent = labels[i];
+      }
+      slider.addEventListener("input", update);
+      update();
+    })();
+
+    // Generate via Fetch
+    (function() {
+      const form = document.getElementById("compliment-form");
+      const errorBox = document.getElementById("error-box");
+      const errorText = document.getElementById("error-text");
+      const retryBtn = document.getElementById("retry-btn");
+      const progress = document.getElementById("progress");
+      const generateBtn = document.getElementById("generate-btn");
+
+      let lastPayload = null;
+
+      function showError(msg) {
+        errorText.textContent = msg || "Something went wrong.";
+        errorBox.classList.remove("hidden");
+      }
+      function hideError() {
+        errorBox.classList.add("hidden");
+      }
+      function setLoading(on) {
+        if (on) {
+          progress.classList.remove("hidden");
+          generateBtn.disabled = true;
+        } else {
+          progress.classList.add("hidden");
+          generateBtn.disabled = false;
+        }
+      }
+
+      async function submit(payload) {
+        setLoading(true);
+        hideError();
+        try {
+          const res = await fetch("/generate", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const code = err.error || "REQUEST_FAILED";
+            const msg = err.message || "Failed to generate. Please try again.";
+            showError(`(${code}) ${msg}`);
+            return;
+          }
+          const data = await res.json();
+          if (data.ok && data.redirect_url) {
+            window.location.href = data.redirect_url;
+          } else {
+            showError("Unexpected response. Please retry.");
+          }
+        } catch (e) {
+          showError("Network error. Check connection and retry.");
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const moodIndex = parseInt(document.getElementById("mood").value || "0");
+        const labels = ["uplifting","funny","poetic","motivational","romantic","witty","gentle","bold","quirky","serene"];
+        const mood = labels[Math.max(0, Math.min(labels.length - 1, moodIndex))];
+        const name = (document.getElementById("name").value || "").trim();
+        lastPayload = { mood, name };
+        submit(lastPayload);
+      });
+
+      retryBtn.addEventListener("click", () => {
+        hideError();
+        if (lastPayload) {
+          submit(lastPayload);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
